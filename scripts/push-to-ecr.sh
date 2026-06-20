@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Push all service images to AWS ECR and update K8s manifests.
-# Usage: AWS_ACCOUNT_ID=123456789 AWS_REGION=us-east-1 ./scripts/push-to-ecr.sh [tag]
+# Usage: AWS_ACCOUNT_ID=123456789 AWS_REGION=us-east-1 bash ./scripts/push-to-ecr.sh [tag]
+[ -z "$BASH_VERSION" ] && exec bash "$0" "$@"
 set -euo pipefail
 
 AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:?Set AWS_ACCOUNT_ID}"

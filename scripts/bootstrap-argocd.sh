@@ -9,7 +9,8 @@
 #   AWS_REGION=us-east-1 \
 #   GIT_REPO=https://github.com/sumithksuresan/price-compare.git \
 #   GITHUB_TOKEN=ghp_... \
-#   ./scripts/bootstrap-argocd.sh
+#   bash ./scripts/bootstrap-argocd.sh
+[ -z "$BASH_VERSION" ] && exec bash "$0" "$@"
 set -euo pipefail
 
 CLUSTER_NAME="${CLUSTER_NAME:?Set CLUSTER_NAME}"

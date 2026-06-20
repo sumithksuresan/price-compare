@@ -225,7 +225,7 @@ export AWS_REGION=us-east-1
 
 # Build and push all 4 service images
 AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID AWS_REGION=$AWS_REGION \
-  ./scripts/push-to-ecr.sh v1.0.0
+  bash ./scripts/push-to-ecr.sh v1.0.0
 ```
 
 This script:
@@ -262,7 +262,7 @@ A single command installs ArgoCD as pods in the cluster (exposed via NLB), then 
 
 ```bash
 CLUSTER_NAME=pricehop-cluster AWS_REGION=us-east-1 \
-  ./scripts/deploy-eks.sh
+  bash ./scripts/deploy-eks.sh
 ```
 
 **What this does, in order:**
@@ -291,7 +291,7 @@ CLUSTER_NAME=pricehop-cluster \
 AWS_REGION=us-east-1 \
 GIT_REPO=https://github.com/sumithksuresan/price-compare.git \
 GITHUB_TOKEN=ghp_YOUR_TOKEN \
-  ./scripts/bootstrap-argocd.sh
+  bash ./scripts/bootstrap-argocd.sh
 ```
 
 The script prints a summary at the end:

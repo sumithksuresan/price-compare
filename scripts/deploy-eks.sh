@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Full cluster deployment: ArgoCD (as a pod) + PriceHop app manifests.
-# Usage: CLUSTER_NAME=pricehop-cluster AWS_REGION=us-east-1 ./scripts/deploy-eks.sh
+# Usage: bash ./scripts/deploy-eks.sh  (or chmod +x and ./scripts/deploy-eks.sh)
+[ -z "$BASH_VERSION" ] && exec bash "$0" "$@"
 set -euo pipefail
 
 CLUSTER_NAME="${CLUSTER_NAME:?Set CLUSTER_NAME}"
