@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-image-updater-config
+  namespace: argocd
+data:
+  # ECR registry config — Image Updater uses IRSA (pod IAM role) for auth.
+  # Attach an IAM role with ecr:GetAuthorizationToken + ecr:BatchGetImage to
+  # the argocd-image-updater service account via IRSA annotations.
+  registries.conf: |
+    registries:
+      - name: ECR
+        api_url: https://123456789.dkr.ecr.ap-south-1.amazonaws.com
+        prefix: 123456789.dkr.ecr.ap-south-1.amazonaws.com
+        insecure: false
+        defaultns: library
+        credentials: ext:/scripts/ecr-login.sh
+        credsexpire: 10h
+
+  # Write tag updates back to git so ArgoCD sees a real diff (pure GitOps)
+  git.commit-message-template: |
+    chore(deploy): update image tags to {{range .Images}}{{.Name}}:{{.NewTag}} {{end}}[skip ci]
+
+  # How often to check ECR for new tags
+  applications.sync-interval: 3m

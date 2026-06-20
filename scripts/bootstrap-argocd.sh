@@ -1,91 +1,97 @@
 #!/usr/bin/env bash
-# One-time bootstrap: install ArgoCD + Image Updater on EKS, then register the app.
-# Usage: CLUSTER_NAME=pricehop-cluster AWS_REGION=ap-south-1 GIT_REPO=https://github.com/ORG/price-compare.git ./scripts/bootstrap-argocd.sh
+# One-time post-deploy setup: login to ArgoCD, register the git repo,
+# create the CI role token, and change the admin password.
+#
+# Run AFTER deploy-eks.sh has applied argocd-install/ and the NLB is ready.
+#
+# Usage:
+#   CLUSTER_NAME=pricehop-cluster \
+#   AWS_REGION=ap-south-1 \
+#   GIT_REPO=https://github.com/sumithksuresan/price-compare.git \
+#   GITHUB_TOKEN=ghp_... \
+#   ./scripts/bootstrap-argocd.sh
 set -euo pipefail
 
 CLUSTER_NAME="${CLUSTER_NAME:?Set CLUSTER_NAME}"
 AWS_REGION="${AWS_REGION:-ap-south-1}"
-GIT_REPO="${GIT_REPO:?Set GIT_REPO to your GitHub repo URL}"
-ARGOCD_VERSION="${ARGOCD_VERSION:-v2.11.3}"
-IMAGE_UPDATER_VERSION="${IMAGE_UPDATER_VERSION:-v0.12.3}"
+GIT_REPO="${GIT_REPO:?Set GIT_REPO}"
+GITHUB_TOKEN="${GITHUB_TOKEN:?Set GITHUB_TOKEN (GitHub PAT with repo scope)}"
 
 echo "==> Connecting to EKS cluster: ${CLUSTER_NAME}"
 aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$AWS_REGION"
 
-# ── 1. Install ArgoCD ──────────────────────────────────────────────────────────
-echo ""
-echo "==> Installing ArgoCD ${ARGOCD_VERSION}…"
-kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
-kubectl apply -n argocd \
-  -f "https://raw.githubusercontent.com/argoproj/argo-cd/${ARGOCD_VERSION}/manifests/install.yaml"
+# ── 1. Resolve ArgoCD LoadBalancer hostname ────────────────────────────────────
+echo "==> Resolving ArgoCD LoadBalancer hostname…"
+for i in $(seq 1 30); do
+  ARGOCD_HOST=$(kubectl get svc argocd-server -n argocd \
+    -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
+  [ -n "$ARGOCD_HOST" ] && break
+  echo "    Waiting… (${i}/30)"
+  sleep 5
+done
 
-echo "==> Waiting for ArgoCD server to be ready…"
-kubectl rollout status deployment/argocd-server -n argocd --timeout=180s
+if [ -z "$ARGOCD_HOST" ]; then
+  echo "❌ Could not get NLB hostname. Run deploy-eks.sh first." && exit 1
+fi
+echo "   ArgoCD host: ${ARGOCD_HOST}"
 
-# ── 2. Install ArgoCD Image Updater ───────────────────────────────────────────
-echo ""
-echo "==> Installing ArgoCD Image Updater ${IMAGE_UPDATER_VERSION}…"
-kubectl apply -n argocd \
-  -f "https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/${IMAGE_UPDATER_VERSION}/manifests/install.yaml"
-
-# Patch image updater with ECR credentials via IRSA (preferred) or access key
-# If using IRSA, annotate the service account instead:
-# kubectl annotate serviceaccount argocd-image-updater \
-#   -n argocd eks.amazonaws.com/role-arn=arn:aws:iam::ACCOUNT:role/ArgoImageUpdaterRole
-
-# ── 3. Register git repo (uses HTTPS + GitHub deploy token) ───────────────────
-echo ""
-echo "==> Configuring ArgoCD CLI…"
-# Get initial admin password
+# ── 2. Get initial admin password ─────────────────────────────────────────────
 ARGOCD_PASS=$(kubectl get secret argocd-initial-admin-secret -n argocd \
   -o jsonpath="{.data.password}" | base64 -d)
 
-# Port-forward in background so we can use argocd CLI locally
-kubectl port-forward svc/argocd-server -n argocd 8080:443 &
-PF_PID=$!
-sleep 3
-trap "kill $PF_PID 2>/dev/null || true" EXIT
-
-argocd login localhost:8080 \
+# ── 3. Log in with argocd CLI ─────────────────────────────────────────────────
+echo ""
+echo "==> Logging in to ArgoCD at ${ARGOCD_HOST}…"
+argocd login "$ARGOCD_HOST" \
   --username admin \
   --password "$ARGOCD_PASS" \
-  --insecure
+  --insecure   # NLB may not have DNS propagated yet; remove after DNS is set
 
-# Add the git repo (prompts for token if not set as env var)
+# ── 4. Register the git repo ──────────────────────────────────────────────────
+echo ""
+echo "==> Registering git repository…"
 argocd repo add "$GIT_REPO" \
   --username git \
-  --password "${GITHUB_TOKEN:-$(read -rsp 'GitHub token: ' t; echo $t)}" \
-  --insecure-skip-server-verification
+  --password "$GITHUB_TOKEN"
 
-# ── 4. Apply ArgoCD manifests ─────────────────────────────────────────────────
+# ── 5. Patch repo URL in manifests and re-apply ───────────────────────────────
 echo ""
-echo "==> Applying AppProject and Application…"
-# Patch repo URL into manifests before applying
-sed "s|https://github.com/YOUR_ORG/price-compare.git|${GIT_REPO}|g" \
-  kubernetes/argocd/appproject.yaml | kubectl apply -f -
-sed "s|https://github.com/YOUR_ORG/price-compare.git|${GIT_REPO}|g" \
-  kubernetes/argocd/application.yaml | kubectl apply -f -
+echo "==> Patching YOUR_ORG placeholder in ArgoCD manifests…"
+sed -i "s|https://github.com/YOUR_ORG/price-compare.git|${GIT_REPO}|g" \
+  kubernetes/argocd/appproject.yaml \
+  kubernetes/argocd/application.yaml
 
-# ── 5. Apply notification config ──────────────────────────────────────────────
-echo ""
-echo "==> Applying notification config…"
-kubectl apply -f kubernetes/argocd/notifications-config.yaml
+kubectl apply -f kubernetes/argocd/appproject.yaml
+kubectl apply -f kubernetes/argocd/application.yaml
 
-# ── 6. Create CI role token for GitHub Actions ────────────────────────────────
+# ── 6. Create CI deployer role token (for GitHub Actions ARGOCD_AUTH_TOKEN) ──
 echo ""
-echo "==> Creating CI deployer token (save this as ARGOCD_AUTH_TOKEN in GitHub Secrets)…"
-argocd proj role create-token pricehop ci-deployer --valid-duration 8760h 2>/dev/null || true
+echo "==> Creating CI deployer token…"
+CI_TOKEN=$(argocd proj role create-token pricehop ci-deployer \
+  --valid-duration 8760h \
+  --token-only 2>/dev/null || echo "")
 
+# ── 7. Set a new admin password ───────────────────────────────────────────────
+NEW_PASS="${ARGOCD_NEW_PASS:-$(openssl rand -base64 16)}"
+argocd account update-password \
+  --current-password "$ARGOCD_PASS" \
+  --new-password "$NEW_PASS"
+
+# ── 8. Summary ────────────────────────────────────────────────────────────────
 echo ""
-echo "✅ ArgoCD bootstrap complete."
-echo ""
-echo "ArgoCD admin password: ${ARGOCD_PASS}"
-echo ""
-echo "Next steps:"
-echo "  1. Add GitHub Actions secrets (Settings → Secrets):"
-echo "     AWS_ACCOUNT_ID, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY"
-echo "     GH_DEPLOY_TOKEN  (PAT with repo write scope)"
-echo "     ARGOCD_SERVER    (e.g. argocd.internal or your LB hostname)"
-echo "     ARGOCD_AUTH_TOKEN (token printed above)"
-echo "  2. Optionally expose ArgoCD UI: kubectl patch svc argocd-server -n argocd -p '{\"spec\":{\"type\":\"LoadBalancer\"}}'"
-echo "  3. Push any change to main — the pipeline closes the loop automatically."
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║              ArgoCD Bootstrap Complete               ║"
+echo "╠══════════════════════════════════════════════════════╣"
+echo "║ UI:       https://${ARGOCD_HOST}"
+echo "║ Username: admin"
+echo "║ Password: ${NEW_PASS}  ← save this"
+echo "╠══════════════════════════════════════════════════════╣"
+echo "║ Add these to GitHub → Settings → Secrets:           ║"
+echo "║                                                      ║"
+echo "║  ARGOCD_SERVER=${ARGOCD_HOST}"
+if [ -n "$CI_TOKEN" ]; then
+echo "║  ARGOCD_AUTH_TOKEN=${CI_TOKEN}"
+else
+echo "║  ARGOCD_AUTH_TOKEN=<run: argocd proj role create-token pricehop ci-deployer>"
+fi
+echo "╚══════════════════════════════════════════════════════╝"

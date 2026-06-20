@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-server
+  namespace: argocd
+spec:
+  template:
+    spec:
+      containers:
+        - name: argocd-server
+          args:
+            - /usr/local/bin/argocd-server
+            # NLB terminates TLS; argocd-server runs in plain HTTP mode inside the cluster
+            - --insecure
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

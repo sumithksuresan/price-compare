@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: argocd
+
+resources:
+  - namespace.yaml
+  # Upstream ArgoCD install — pin to a specific version for reproducibility.
+  # To upgrade: change the tag here, commit, re-run deploy-eks.sh.
+  - https://raw.githubusercontent.com/argoproj/argo-cd/v2.11.3/manifests/install.yaml
+  # ArgoCD Image Updater — tracks new ECR tags and commits tag changes back to git
+  - https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/v0.12.3/manifests/install.yaml
+
+patches:
+  # Expose argocd-server over an AWS Network Load Balancer
+  - path: argocd-server-svc-patch.yaml
+    target:
+      kind: Service
+      name: argocd-server
+  # Disable TLS termination inside the pod — NLB handles TLS at the edge
+  - path: argocd-server-deploy-patch.yaml
+    target:
+      kind: Deployment
+      name: argocd-server
+  # Image Updater: point at ECR and use IRSA for auth
+  - path: image-updater-cm-patch.yaml
+    target:
+      kind: ConfigMap
+      name: argocd-image-updater-config
