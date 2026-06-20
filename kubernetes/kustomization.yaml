@@ -14,16 +14,19 @@ resources:
 # CI pipeline writes new git-SHA tags here on every push to main.
 images:
 - name: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
-  newTag: c5de53a
+  newName: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
+  newTag: 4ecac5e
 - name: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
-  newTag: c5de53a
+  newName: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
+  newTag: 4ecac5e
 - name: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
-  newTag: c5de53a
+  newName: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
+  newTag: 4ecac5e
 - name: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
-  newTag: c5de53a
+  newName: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
+  newTag: 4ecac5e
 
 labels:
 - pairs:
     app.kubernetes.io/managed-by: argocd
     app.kubernetes.io/part-of: pricehop
-  includeSelectors: false
