@@ -80,6 +80,17 @@ jobs:
       - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Create ECR repository if it does not exist
+        run: |
+          aws ecr describe-repositories \
+            --repository-names "pricehop/${{ matrix.service }}" \
+            --region ${{ env.AWS_REGION }} 2>/dev/null \
+          || aws ecr create-repository \
+            --repository-name "pricehop/${{ matrix.service }}" \
+            --region ${{ env.AWS_REGION }} \
+            --image-scanning-configuration scanOnPush=true \
+            --image-tag-mutability MUTABLE
+
       - name: Set image tag
         id: meta
         run: |
