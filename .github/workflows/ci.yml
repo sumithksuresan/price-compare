@@ -150,8 +150,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Use a deploy key / PAT so the push triggers downstream workflows
-          token: ${{ secrets.GH_DEPLOY_TOKEN }}
+          # GH_DEPLOY_TOKEN (PAT with repo scope) allows the manifest commit to
+          # trigger downstream workflows. Falls back to GITHUB_TOKEN if not set.
+          token: ${{ secrets.GH_DEPLOY_TOKEN || secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Install kustomize
