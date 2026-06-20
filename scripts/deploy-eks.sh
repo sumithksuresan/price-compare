@@ -101,6 +101,19 @@ for pvc in auth-data-pvc price-data-pvc; do
   done
 done
 
+# Delete any Deployments with stale immutable selectors before applying.
+# This happens when commonLabels previously injected extra labels into selectors.
+echo "==> Checking for Deployments with stale selectors…"
+for deploy in auth-service price-service frontend api-gateway; do
+  SELECTOR=$(kubectl get deployment "$deploy" -n pricehop \
+    -o jsonpath='{.spec.selector.matchLabels}' 2>/dev/null || echo "")
+  # If selector contains managed-by label it's from the old commonLabels — delete it
+  if echo "$SELECTOR" | grep -q "managed-by"; then
+    echo "    Deleting ${deploy} (stale selector from old commonLabels)…"
+    kubectl delete deployment "$deploy" -n pricehop --ignore-not-found
+  fi
+done
+
 kubectl apply -k kubernetes/ --server-side --force-conflicts
 
 echo ""
