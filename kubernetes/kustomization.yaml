@@ -14,20 +14,21 @@ resources:
 
 # CI pipeline writes new git-SHA tags here on every push to main.
 images:
-- name: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
-  newName: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
+- name: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
+  newName: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
   newTag: da85e39
-- name: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
-  newName: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
+- name: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
+  newName: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
   newTag: da85e39
-- name: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
-  newName: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
+- name: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
+  newName: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
   newTag: da85e39
-- name: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
-  newName: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
+- name: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
+  newName: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
   newTag: da85e39
 
 labels:
 - pairs:
     app.kubernetes.io/managed-by: argocd
     app.kubernetes.io/part-of: pricehop
+  includeSelectors: false

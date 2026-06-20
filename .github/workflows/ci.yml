@@ -187,6 +187,9 @@ jobs:
           git add kubernetes/kustomization.yaml
           git diff --cached --quiet && echo "No changes" && exit 0
           git commit -m "chore(deploy): update image tags to ${SHORT} [skip ci]"
+          # Pull with rebase to avoid non-fast-forward rejection when another
+          # job or local commit landed between our checkout and this push.
+          git pull --rebase origin main
           git push origin main
 
       - name: Notify ArgoCD to sync (optional hard-sync)
