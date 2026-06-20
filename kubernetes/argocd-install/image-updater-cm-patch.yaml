@@ -10,8 +10,8 @@ data:
   registries.conf: |
     registries:
       - name: ECR
-        api_url: https://123456789.dkr.ecr.us-east-1.amazonaws.com
-        prefix: 123456789.dkr.ecr.us-east-1.amazonaws.com
+        api_url: https://975050132599.dkr.ecr.us-east-1.amazonaws.com
+        prefix: 975050132599.dkr.ecr.us-east-1.amazonaws.com
         insecure: false
         defaultns: library
         credentials: ext:/scripts/ecr-login.sh

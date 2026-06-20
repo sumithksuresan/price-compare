@@ -10,10 +10,10 @@ metadata:
     # It writes updated tags back to kustomization.yaml via a git commit,
     # then ArgoCD syncs. Requires argocd-image-updater to be installed.
     argocd-image-updater.argoproj.io/image-list: |
-      frontend=123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend,
-      auth=123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service,
-      price=123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service,
-      gateway=123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
+      frontend=975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend,
+      auth=975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service,
+      price=975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service,
+      gateway=975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
     argocd-image-updater.argoproj.io/frontend.update-strategy: newest-build
     argocd-image-updater.argoproj.io/auth.update-strategy: newest-build
     argocd-image-updater.argoproj.io/price.update-strategy: newest-build

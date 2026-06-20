@@ -91,10 +91,32 @@ kubectl apply -k kubernetes/
 
 echo ""
 echo "==> Waiting for pricehop rollout…"
+ROLLOUT_OK=true
 for deploy in auth-service price-service frontend api-gateway; do
   echo "    → ${deploy}"
-  kubectl rollout status deployment/"${deploy}" -n pricehop --timeout=120s
+  if ! kubectl rollout status deployment/"${deploy}" -n pricehop --timeout=180s; then
+    ROLLOUT_OK=false
+    echo ""
+    echo "⚠️  Rollout timed out for ${deploy}. Pod status:"
+    kubectl get pods -n pricehop -l "app=${deploy}" -o wide
+    echo ""
+    echo "   Recent events:"
+    kubectl get events -n pricehop --field-selector involvedObject.name="${deploy}" \
+      --sort-by='.lastTimestamp' 2>/dev/null | tail -10
+    echo ""
+    echo "   Pod describe (first pod):"
+    POD=$(kubectl get pod -n pricehop -l "app=${deploy}" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+    [ -n "$POD" ] && kubectl describe pod "$POD" -n pricehop | tail -30
+    echo ""
+    echo "   ── Common causes ──────────────────────────────────────────"
+    echo "   ImagePullBackOff → Node IAM role missing ECR pull policy."
+    echo "   Fix: attach AmazonEC2ContainerRegistryReadOnly to the node"
+    echo "        group IAM role, then: kubectl rollout restart deployment/${deploy} -n pricehop"
+    echo "   ───────────────────────────────────────────────────────────"
+  fi
 done
+
+[ "$ROLLOUT_OK" = false ] && echo "" && echo "❌ One or more deployments did not roll out. See diagnostics above." && exit 1
 
 # ── 6. Summary ────────────────────────────────────────────────────────────────
 echo ""
