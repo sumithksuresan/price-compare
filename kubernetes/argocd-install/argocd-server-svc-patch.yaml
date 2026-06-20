@@ -6,6 +6,7 @@ metadata:
   annotations:
     # AWS Network Load Balancer — lower latency than ALB, preserves client IPs
     service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
     service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
     # TLS termination at the NLB level using ACM certificate.
     # Replace the ARN with your certificate from AWS Certificate Manager.
