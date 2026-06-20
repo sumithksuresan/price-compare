@@ -4,24 +4,36 @@ kind: Kustomization
 namespace: pricehop
 
 resources:
-  - manifests/namespace.yaml
-  - manifests/secrets.yaml
-  - manifests/auth-service.yaml
-  - manifests/price-service.yaml
-  - manifests/frontend.yaml
-  - manifests/api-gateway.yaml
+- manifests/namespace.yaml
+- manifests/secrets.yaml
+- manifests/auth-service.yaml
+- manifests/price-service.yaml
+- manifests/frontend.yaml
+- manifests/api-gateway.yaml
 
 # ArgoCD Image Updater / CI pipeline writes new SHAs here.
 # Each entry overrides the image tag in the matching Deployment.
 images:
-  - name: 123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
-    newTag: latest
-  - name: 123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
-    newTag: latest
-  - name: 123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
-    newTag: latest
-  - name: 123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
-    newTag: latest
+- name: 123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
+  newTag: latest
+- name: 123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
+  newTag: latest
+- name: 123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
+  newTag: latest
+- name: 123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
+  newTag: latest
+- name: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
+  newName: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
+  newTag: dba4416
+- name: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
+  newName: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
+  newTag: dba4416
+- name: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
+  newName: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
+  newTag: dba4416
+- name: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
+  newName: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
+  newTag: dba4416
 
 commonLabels:
   app.kubernetes.io/managed-by: argocd
