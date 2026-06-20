@@ -8,9 +8,9 @@ resources:
   # Upstream ArgoCD install — pin to a specific version for reproducibility.
   # To upgrade: change the tag here, commit, re-run deploy-eks.sh.
   - https://raw.githubusercontent.com/argoproj/argo-cd/v2.11.3/manifests/install.yaml
-  # Note: ArgoCD Image Updater is installed separately via kubectl apply -f in
-  # deploy-eks.sh (stable branch) because kustomize mishandles
-  # raw.githubusercontent.com URLs for that repo (attempts git clone).
+  # Note: ArgoCD Image Updater v1.2.1 is installed separately via kubectl apply
+  # in deploy-eks.sh — manifest is at config/install.yaml (not manifests/)
+  # and kustomize mishandles raw.githubusercontent.com for that repo anyway.
 
 patches:
   # Expose argocd-server over an AWS Network Load Balancer
