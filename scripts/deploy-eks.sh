@@ -12,8 +12,17 @@ aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$AWS_REGION"
 
 # ── 1. Install / upgrade ArgoCD inside the cluster ────────────────────────────
 echo ""
-echo "==> Applying ArgoCD (argocd-install/)…"
+echo "==> Applying ArgoCD core (argocd-install/)…"
 kubectl apply -k kubernetes/argocd-install/
+
+echo ""
+echo "==> Installing ArgoCD Image Updater v0.12.3…"
+kubectl apply -n argocd -f \
+  https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/v0.12.3/manifests/install.yaml
+
+echo ""
+echo "==> Applying Image Updater config patch…"
+kubectl apply -f kubernetes/argocd-install/image-updater-cm-patch.yaml
 
 echo ""
 echo "==> Waiting for ArgoCD deployments to be ready…"

@@ -8,8 +8,9 @@ resources:
   # Upstream ArgoCD install — pin to a specific version for reproducibility.
   # To upgrade: change the tag here, commit, re-run deploy-eks.sh.
   - https://raw.githubusercontent.com/argoproj/argo-cd/v2.11.3/manifests/install.yaml
-  # ArgoCD Image Updater — tracks new ECR tags and commits tag changes back to git
-  - https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/v0.12.3/manifests/install.yaml
+  # Note: ArgoCD Image Updater is installed separately via kubectl apply -f in
+  # deploy-eks.sh because kustomize mishandles raw.githubusercontent.com URLs
+  # for the image-updater repo (attempts a git clone instead of HTTP fetch).
 
 patches:
   # Expose argocd-server over an AWS Network Load Balancer
