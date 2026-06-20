@@ -90,13 +90,35 @@ fi
 # Apply PVCs first and wait for them to be Bound before starting pods
 echo "==> Ensuring PVCs exist before deploying pods…"
 kubectl apply -f kubernetes/manifests/namespace.yaml
-kubectl apply -f kubernetes/manifests/pvcs.yaml
+
+# Detect the default StorageClass on this cluster
+DEFAULT_SC=$(kubectl get storageclass \
+  -o jsonpath='{.items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")].metadata.name}' \
+  2>/dev/null | awk '{print $1}')
+DEFAULT_SC="${DEFAULT_SC:-gp2}"
+echo "    Using StorageClass: ${DEFAULT_SC}"
+
+# Delete PVCs that are stuck in Pending (spec is immutable — must recreate)
+for pvc in auth-data-pvc price-data-pvc; do
+  STATUS=$(kubectl get pvc "$pvc" -n pricehop -o jsonpath='{.status.phase}' 2>/dev/null || echo "")
+  if [ "$STATUS" = "Pending" ]; then
+    echo "    Deleting stuck Pending PVC: ${pvc}"
+    kubectl delete pvc "$pvc" -n pricehop --ignore-not-found
+    sleep 2
+  fi
+done
+
+# Patch pvcs.yaml with the detected StorageClass and apply
+sed "s/storageClassName:.*/storageClassName: ${DEFAULT_SC}/" \
+  kubernetes/manifests/pvcs.yaml | kubectl apply -f - 2>/dev/null \
+|| kubectl apply -f kubernetes/manifests/pvcs.yaml
+
 echo "    Waiting for PVCs to be Bound…"
 for pvc in auth-data-pvc price-data-pvc; do
   for i in $(seq 1 24); do
     STATUS=$(kubectl get pvc "$pvc" -n pricehop -o jsonpath='{.status.phase}' 2>/dev/null || echo "Pending")
     [ "$STATUS" = "Bound" ] && echo "    ✅ ${pvc} Bound" && break
-    [ "$i" -eq 24 ] && echo "    ⚠️  ${pvc} still ${STATUS} after 120s — continuing anyway"
+    [ "$i" -eq 24 ] && echo "    ⚠️  ${pvc} still ${STATUS} — check: kubectl get storageclass"
     sleep 5
   done
 done
