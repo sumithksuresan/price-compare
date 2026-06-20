@@ -15,6 +15,8 @@ spec:
       labels:
         app: price-service
     spec:
+      securityContext:
+        fsGroup: 0
       containers:
         - name: price-service
           image: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service:latest
