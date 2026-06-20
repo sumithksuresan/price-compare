@@ -24,16 +24,16 @@ images:
   newTag: latest
 - name: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
   newName: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
-  newTag: 3c4f52a
+  newTag: c5de53a
 - name: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
   newName: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
-  newTag: 3c4f52a
+  newTag: c5de53a
 - name: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
   newName: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
-  newTag: 3c4f52a
+  newTag: c5de53a
 - name: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
   newName: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
-  newTag: 3c4f52a
+  newTag: c5de53a
 
 commonLabels:
   app.kubernetes.io/managed-by: argocd
