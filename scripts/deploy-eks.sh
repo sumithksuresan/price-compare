@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Full cluster deployment: ArgoCD (as a pod) + PriceHop app manifests.
-# Usage: CLUSTER_NAME=pricehop-cluster AWS_REGION=ap-south-1 ./scripts/deploy-eks.sh
+# Usage: CLUSTER_NAME=pricehop-cluster AWS_REGION=us-east-1 ./scripts/deploy-eks.sh
 set -euo pipefail
 
 CLUSTER_NAME="${CLUSTER_NAME:?Set CLUSTER_NAME}"
-AWS_REGION="${AWS_REGION:-ap-south-1}"
+AWS_REGION="${AWS_REGION:-us-east-1}"
 
 echo "==> Connecting to EKS cluster: ${CLUSTER_NAME}"
 aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$AWS_REGION"

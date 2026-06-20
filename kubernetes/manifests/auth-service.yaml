@@ -18,7 +18,7 @@ spec:
       containers:
         - name: auth-service
           # Replace with your ECR image URI after push
-          image: 123456789.dkr.ecr.ap-south-1.amazonaws.com/pricehop/auth-service:latest
+          image: 123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 5001

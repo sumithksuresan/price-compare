@@ -13,8 +13,8 @@ on:
       - "services/**"
 
 env:
-  AWS_REGION: ap-south-1
-  ECR_BASE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/pricehop
+  AWS_REGION: us-east-1
+  ECR_BASE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/pricehop
 
 jobs:
   # ─────────────────────────────────────────────────────────────

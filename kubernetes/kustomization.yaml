@@ -14,13 +14,13 @@ resources:
 # ArgoCD Image Updater / CI pipeline writes new SHAs here.
 # Each entry overrides the image tag in the matching Deployment.
 images:
-  - name: 123456789.dkr.ecr.ap-south-1.amazonaws.com/pricehop/frontend
+  - name: 123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
     newTag: latest
-  - name: 123456789.dkr.ecr.ap-south-1.amazonaws.com/pricehop/auth-service
+  - name: 123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
     newTag: latest
-  - name: 123456789.dkr.ecr.ap-south-1.amazonaws.com/pricehop/price-service
+  - name: 123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
     newTag: latest
-  - name: 123456789.dkr.ecr.ap-south-1.amazonaws.com/pricehop/api-gateway
+  - name: 123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
     newTag: latest
 
 commonLabels:

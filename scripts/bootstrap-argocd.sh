@@ -6,14 +6,14 @@
 #
 # Usage:
 #   CLUSTER_NAME=pricehop-cluster \
-#   AWS_REGION=ap-south-1 \
+#   AWS_REGION=us-east-1 \
 #   GIT_REPO=https://github.com/sumithksuresan/price-compare.git \
 #   GITHUB_TOKEN=ghp_... \
 #   ./scripts/bootstrap-argocd.sh
 set -euo pipefail
 
 CLUSTER_NAME="${CLUSTER_NAME:?Set CLUSTER_NAME}"
-AWS_REGION="${AWS_REGION:-ap-south-1}"
+AWS_REGION="${AWS_REGION:-us-east-1}"
 GIT_REPO="${GIT_REPO:?Set GIT_REPO}"
 GITHUB_TOKEN="${GITHUB_TOKEN:?Set GITHUB_TOKEN (GitHub PAT with repo scope)}"
 

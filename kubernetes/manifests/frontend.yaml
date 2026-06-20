@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: 123456789.dkr.ecr.ap-south-1.amazonaws.com/pricehop/frontend:latest
+          image: 123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 5000

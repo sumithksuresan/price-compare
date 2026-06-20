@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Push all service images to AWS ECR and update K8s manifests.
-# Usage: AWS_ACCOUNT_ID=123456789 AWS_REGION=ap-south-1 ./scripts/push-to-ecr.sh [tag]
+# Usage: AWS_ACCOUNT_ID=123456789 AWS_REGION=us-east-1 ./scripts/push-to-ecr.sh [tag]
 set -euo pipefail
 
 AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:?Set AWS_ACCOUNT_ID}"
-AWS_REGION="${AWS_REGION:-ap-south-1}"
+AWS_REGION="${AWS_REGION:-us-east-1}"
 TAG="${1:-latest}"
 ECR_BASE="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/pricehop"
 
@@ -31,7 +31,7 @@ for SVC in "${SERVICES[@]}"; do
   docker push "${REPO}:${TAG}"
 
   echo "==> [${SVC}] Updating K8s manifest image reference…"
-  sed -i "s|123456789.dkr.ecr.ap-south-1.amazonaws.com/pricehop/${SVC}:.*|${REPO}:${TAG}|g" \
+  sed -i "s|123456789.dkr.ecr.us-east-1.amazonaws.com/pricehop/${SVC}:.*|${REPO}:${TAG}|g" \
     "kubernetes/manifests/${SVC}.yaml" 2>/dev/null || true
 done
 
