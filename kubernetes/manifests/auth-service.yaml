@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: pricehop
+  labels:
+    app: auth-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          # Replace with your ECR image URI after push
+          image: 123456789.dkr.ecr.ap-south-1.amazonaws.com/pricehop/auth-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5001
+          env:
+            - name: DB_PATH
+              value: /data/auth.db
+            - name: FRONTEND_URL
+              value: "http://pricehop.example.com"
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pricehop-secrets
+                  key: SECRET_KEY
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: pricehop-secrets
+                  key: JWT_SECRET
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: pricehop-secrets
+                  key: GOOGLE_CLIENT_ID
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: pricehop-secrets
+                  key: GOOGLE_CLIENT_SECRET
+          volumeMounts:
+            - name: auth-data
+              mountPath: /data
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+      volumes:
+        - name: auth-data
+          persistentVolumeClaim:
+            claimName: auth-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: pricehop
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - port: 5001
+      targetPort: 5001
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: auth-data-pvc
+  namespace: pricehop
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp2   # EKS default StorageClass
+  resources:
+    requests:
+      storage: 1Gi

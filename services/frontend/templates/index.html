@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PriceHop — Compare Quick Delivery Prices</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <span class="logo-icon">🛒</span>
+      <span class="logo-text">PriceHop</span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn btn-ghost" id="watchlistBtn" style="display:none" onclick="toggleWatchlist()">
+        ⭐ Watchlist
+      </button>
+      <div id="authArea">
+        <button class="btn btn-outline" onclick="showAuthModal('login')">Log in</button>
+        <button class="btn btn-primary" onclick="showAuthModal('register')">Sign up</button>
+      </div>
+      <div id="userArea" style="display:none">
+        <span class="user-name" id="userName"></span>
+        <button class="btn btn-ghost" onclick="logout()">Log out</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1>Find the Cheapest Price <br/><span class="gradient-text">Across Every Quick Delivery App</span></h1>
+    <p class="hero-sub">Compare Blinkit, Swiggy Instamart, Zepto & BigBasket in seconds.</p>
+
+    <div class="search-bar-wrap">
+      <input
+        type="text"
+        id="searchInput"
+        class="search-input"
+        placeholder="Search for milk, eggs, chips, shampoo…"
+        autocomplete="off"
+        onkeydown="if(event.key==='Enter') doSearch()"
+      />
+      <button class="btn btn-primary btn-search" onclick="doSearch()">
+        <span>Search</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+    </div>
+
+    <!-- Platform filters -->
+    <div class="platform-filters" id="platformFilters">
+      <button class="filter-chip active" data-platform="all" onclick="togglePlatform('all', this)">All</button>
+      <button class="filter-chip" data-platform="blinkit" onclick="togglePlatform('blinkit', this)">
+        <img src="/static/css/blinkit.svg" onerror="this.style.display='none'" class="chip-icon"/>Blinkit
+      </button>
+      <button class="filter-chip" data-platform="swiggy_instamart" onclick="togglePlatform('swiggy_instamart', this)">Swiggy Instamart</button>
+      <button class="filter-chip" data-platform="zepto" onclick="togglePlatform('zepto', this)">Zepto</button>
+      <button class="filter-chip" data-platform="bigbasket" onclick="togglePlatform('bigbasket', this)">BigBasket</button>
+    </div>
+  </section>
+
+  <!-- TRENDING -->
+  <section class="trending-section" id="trendingSection">
+    <h3 class="section-title">🔥 Trending Searches</h3>
+    <div class="trending-chips" id="trendingChips"></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="results-section" id="resultsSection" style="display:none">
+    <div class="results-header">
+      <h2 id="resultsTitle">Results</h2>
+      <div class="sort-controls">
+        <label>Sort by:</label>
+        <select id="sortSelect" onchange="sortResults()">
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+          <option value="discount">Biggest Discount</option>
+          <option value="delivery">Fastest Delivery</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Best deal banner -->
+    <div class="best-deal-banner" id="bestDealBanner" style="display:none">
+      <span class="best-label">🏆 Best Deal</span>
+      <span id="bestDealText"></span>
+    </div>
+
+    <!-- Price cards grid -->
+    <div class="cards-grid" id="cardsGrid"></div>
+
+    <div class="no-results" id="noResults" style="display:none">
+      <p>😕 No results found. Try a different search term.</p>
+      <p class="hint">Try: milk, bread, eggs, rice, chips, shampoo…</p>
+    </div>
+  </section>
+
+  <!-- WATCHLIST PANEL -->
+  <div class="panel-overlay" id="watchlistOverlay" onclick="toggleWatchlist()" style="display:none"></div>
+  <aside class="watchlist-panel" id="watchlistPanel">
+    <div class="panel-header">
+      <h3>⭐ My Watchlist</h3>
+      <button class="btn btn-ghost icon-btn" onclick="toggleWatchlist()">✕</button>
+    </div>
+    <div id="watchlistItems"><p class="empty-msg">No items yet. Search for a product and add it.</p></div>
+  </aside>
+
+  <!-- AUTH MODAL -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()" style="display:none"></div>
+  <div class="modal" id="authModal" style="display:none">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+
+    <div class="modal-tabs">
+      <button class="tab active" id="loginTab" onclick="switchTab('login')">Log in</button>
+      <button class="tab" id="registerTab" onclick="switchTab('register')">Sign up</button>
+    </div>
+
+    <!-- Login form -->
+    <form id="loginForm" onsubmit="submitLogin(event)">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" required placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" required placeholder="••••••••" />
+      </div>
+      <div class="form-error" id="loginError"></div>
+      <button type="submit" class="btn btn-primary btn-block">Log in</button>
+    </form>
+
+    <!-- Register form -->
+    <form id="registerForm" style="display:none" onsubmit="submitRegister(event)">
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="regName" placeholder="Your name" />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="regEmail" required placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="regPassword" required placeholder="Min 6 characters" />
+      </div>
+      <div class="form-error" id="registerError"></div>
+      <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+    </form>
+
+    <div class="sso-divider"><span>or continue with</span></div>
+    <a href="/sso/google" class="btn btn-google btn-block">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </a>
+  </div>
+
+  <!-- LOADING SPINNER -->
+  <div class="loading-overlay" id="loadingOverlay" style="display:none">
+    <div class="spinner"></div>
+    <p>Fetching prices…</p>
+  </div>
+
+  <footer class="footer">
+    <p>PriceHop — Prices are indicative and may vary. Not affiliated with any delivery platform.</p>
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+  <script>
+    // Pass server config to JS
+    window.GOOGLE_CLIENT_ID = "{{ google_client_id }}";
+    window.AUTH_URL = "/api/auth";
+    window.PRICE_URL = "/api";
+  </script>
+</body>
+</html>

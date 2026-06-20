@@ -1,0 +1,56 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: pricehop
+  namespace: argocd
+  # Prevent accidental deletion of the project while apps are attached
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: PriceHop quick-delivery price comparison platform
+
+  # Only allow syncing from your git repo
+  sourceRepos:
+    - https://github.com/YOUR_ORG/price-compare.git   # replace with your repo URL
+
+  # Only allow deploying into the pricehop namespace on the local cluster
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: pricehop
+    # Allow ArgoCD system namespace for self-managed resources
+    - server: https://kubernetes.default.svc
+      namespace: argocd
+
+  # Cluster-scoped resources the project may manage
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+
+  # Namespace-scoped resources allowed
+  namespaceResourceWhitelist:
+    - group: "apps"
+      kind: Deployment
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: PersistentVolumeClaim
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Secret
+    - group: "autoscaling"
+      kind: HorizontalPodAutoscaler
+
+  # Roles within the project
+  roles:
+    - name: ci-deployer
+      description: Used by CI pipeline to trigger syncs
+      policies:
+        - p, proj:pricehop:ci-deployer, applications, sync, pricehop/*, allow
+        - p, proj:pricehop:ci-deployer, applications, get,  pricehop/*, allow
+      jwtTokens: []   # CI generates tokens via `argocd proj role create-token`
+
+    - name: read-only
+      description: Read-only view for developers
+      policies:
+        - p, proj:pricehop:read-only, applications, get, pricehop/*, allow

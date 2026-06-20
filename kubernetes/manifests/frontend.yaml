@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: pricehop
+  labels:
+    app: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: 123456789.dkr.ecr.ap-south-1.amazonaws.com/pricehop/frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          env:
+            - name: AUTH_SERVICE_URL
+              value: http://auth-service:5001
+            - name: PRICE_SERVICE_URL
+              value: http://price-service:5002
+            - name: FRONTEND_URL
+              value: "http://pricehop.example.com"
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: pricehop-secrets
+                  key: GOOGLE_CLIENT_ID
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: pricehop
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 5000
+      targetPort: 5000
+  type: ClusterIP

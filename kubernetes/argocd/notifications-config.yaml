@@ -1,0 +1,73 @@
+# ArgoCD Notifications — Slack alerts on sync success/failure.
+# Apply with: kubectl apply -f kubernetes/argocd/notifications-config.yaml -n argocd
+#
+# Prerequisites:
+#   kubectl create secret generic argocd-notifications-secret \
+#     --namespace argocd \
+#     --from-literal=slack-token='xoxb-...'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+data:
+  service.slack: |
+    token: $slack-token
+
+  # --- Templates ---
+  template.app-deployed: |
+    slack:
+      attachments: |
+        [{
+          "color": "#18be52",
+          "title": "✅ {{.app.metadata.name}} deployed",
+          "text": "Sync to `{{.app.status.sync.revision | truncate 7 \"\"}}` succeeded on *{{.app.spec.destination.server}}*",
+          "fields": [
+            {"title": "Namespace", "value": "{{.app.spec.destination.namespace}}", "short": true},
+            {"title": "Environment", "value": "production", "short": true}
+          ]
+        }]
+
+  template.app-sync-failed: |
+    slack:
+      attachments: |
+        [{
+          "color": "#e53e3e",
+          "title": "❌ {{.app.metadata.name}} sync FAILED",
+          "text": "{{.app.status.operationState.message}}",
+          "fields": [
+            {"title": "Revision", "value": "{{.app.status.sync.revision | truncate 7 \"\"}}", "short": true},
+            {"title": "Phase",    "value": "{{.app.status.operationState.phase}}", "short": true}
+          ]
+        }]
+
+  template.app-health-degraded: |
+    slack:
+      attachments: |
+        [{
+          "color": "#f6a623",
+          "title": "⚠️ {{.app.metadata.name}} health DEGRADED",
+          "text": "Application health dropped to *{{.app.status.health.status}}*"
+        }]
+
+  # --- Triggers ---
+  trigger.on-deployed: |
+    - when: app.status.operationState.phase in ['Succeeded'] and app.status.health.status == 'Healthy'
+      send: [app-deployed]
+
+  trigger.on-sync-failed: |
+    - when: app.status.operationState.phase in ['Error', 'Failed']
+      send: [app-sync-failed]
+
+  trigger.on-health-degraded: |
+    - when: app.status.health.status == 'Degraded'
+      send: [app-health-degraded]
+
+  # --- Subscriptions (which app → which channel) ---
+  subscriptions: |
+    - recipients:
+        - slack:#pricehop-deploys
+      triggers:
+        - on-deployed
+        - on-sync-failed
+        - on-health-degraded

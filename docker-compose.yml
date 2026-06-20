@@ -1,0 +1,69 @@
+version: "3.9"
+
+x-common-env: &common-env
+  FLASK_DEBUG: "0"
+  SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+  JWT_SECRET: ${JWT_SECRET:-jwt-change-me-in-production}
+
+services:
+
+  api-gateway:
+    build: ./services/api-gateway
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - auth-service
+      - price-service
+    restart: unless-stopped
+    networks:
+      - app-net
+
+  frontend:
+    build: ./services/frontend
+    environment:
+      <<: *common-env
+      AUTH_SERVICE_URL: http://auth-service:5001
+      PRICE_SERVICE_URL: http://price-service:5002
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+    depends_on:
+      - auth-service
+      - price-service
+    restart: unless-stopped
+    networks:
+      - app-net
+
+  auth-service:
+    build: ./services/auth-service
+    environment:
+      <<: *common-env
+      DB_PATH: /data/auth.db
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+    volumes:
+      - auth-data:/data
+    restart: unless-stopped
+    networks:
+      - app-net
+
+  price-service:
+    build: ./services/price-service
+    environment:
+      <<: *common-env
+      DB_PATH: /data/prices.db
+      CACHE_TTL_SECONDS: "300"
+    volumes:
+      - price-data:/data
+    restart: unless-stopped
+    networks:
+      - app-net
+
+volumes:
+  auth-data:
+  price-data:
+
+networks:
+  app-net:
+    driver: bridge

@@ -1,0 +1,78 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pricehop
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: pricehop
+  annotations:
+    # ArgoCD Image Updater — automatically tracks new ECR image tags.
+    # It writes updated tags back to kustomization.yaml via a git commit,
+    # then ArgoCD syncs. Requires argocd-image-updater to be installed.
+    argocd-image-updater.argoproj.io/image-list: |
+      frontend=123456789.dkr.ecr.ap-south-1.amazonaws.com/pricehop/frontend,
+      auth=123456789.dkr.ecr.ap-south-1.amazonaws.com/pricehop/auth-service,
+      price=123456789.dkr.ecr.ap-south-1.amazonaws.com/pricehop/price-service,
+      gateway=123456789.dkr.ecr.ap-south-1.amazonaws.com/pricehop/api-gateway
+    argocd-image-updater.argoproj.io/frontend.update-strategy: newest-build
+    argocd-image-updater.argoproj.io/auth.update-strategy: newest-build
+    argocd-image-updater.argoproj.io/price.update-strategy: newest-build
+    argocd-image-updater.argoproj.io/gateway.update-strategy: newest-build
+    # Write tag updates back to git (GitOps — no cluster state drift)
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: main
+  # Protect from kubectl delete without --cascade
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: pricehop
+
+  source:
+    repoURL: https://github.com/YOUR_ORG/price-compare.git   # replace
+    targetRevision: main
+    path: kubernetes          # ArgoCD reads kubernetes/kustomization.yaml
+    kustomize:
+      # Pass environment-specific image registry prefix if needed
+      # namePrefix: prod-
+      commonAnnotations:
+        deployed-by: argocd
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pricehop
+
+  syncPolicy:
+    automated:
+      prune: true        # remove resources deleted from git
+      selfHeal: true     # revert manual kubectl changes automatically
+      allowEmpty: false  # never wipe the namespace accidentally
+    syncOptions:
+      - CreateNamespace=true          # create pricehop ns if missing
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true                # delete old resources after new ones are healthy
+      - ServerSideApply=true          # avoids annotation length limits
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+
+  # Don't flag expected drift as OutOfSync
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas   # HPA manages replicas — ignore drift here
+    - group: ""
+      kind: Secret
+      jsonPointers:
+        - /data            # secrets are managed externally (AWS Secrets Manager / Vault)
+
+  # Health checks on top of ArgoCD's built-ins
+  info:
+    - name: repo
+      value: https://github.com/YOUR_ORG/price-compare
+    - name: slack-channel
+      value: "#pricehop-deploys"

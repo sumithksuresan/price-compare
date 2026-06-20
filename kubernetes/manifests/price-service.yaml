@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: price-service
+  namespace: pricehop
+  labels:
+    app: price-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: price-service
+  template:
+    metadata:
+      labels:
+        app: price-service
+    spec:
+      containers:
+        - name: price-service
+          image: 123456789.dkr.ecr.ap-south-1.amazonaws.com/pricehop/price-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5002
+          env:
+            - name: DB_PATH
+              value: /data/prices.db
+            - name: CACHE_TTL_SECONDS
+              value: "300"
+          volumeMounts:
+            - name: price-data
+              mountPath: /data
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5002
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5002
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+      volumes:
+        - name: price-data
+          persistentVolumeClaim:
+            claimName: price-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: price-service
+  namespace: pricehop
+spec:
+  selector:
+    app: price-service
+  ports:
+    - port: 5002
+      targetPort: 5002
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: price-data-pvc
+  namespace: pricehop
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp2
+  resources:
+    requests:
+      storage: 2Gi
