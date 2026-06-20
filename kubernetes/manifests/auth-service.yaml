@@ -6,7 +6,7 @@ metadata:
   labels:
     app: auth-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: auth-service
@@ -17,7 +17,6 @@ spec:
     spec:
       containers:
         - name: auth-service
-          # Replace with your ECR image URI after push
           image: 975050132599.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service:latest
           imagePullPolicy: Always
           ports:
@@ -86,16 +85,3 @@ spec:
     - port: 5001
       targetPort: 5001
   type: ClusterIP
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: auth-data-pvc
-  namespace: pricehop
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: gp2   # EKS default StorageClass
-  resources:
-    requests:
-      storage: 1Gi

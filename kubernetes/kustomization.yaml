@@ -6,6 +6,7 @@ namespace: pricehop
 resources:
 - manifests/namespace.yaml
 - manifests/secrets.yaml
+- manifests/pvcs.yaml
 - manifests/auth-service.yaml
 - manifests/price-service.yaml
 - manifests/frontend.yaml

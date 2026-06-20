@@ -87,7 +87,21 @@ if ! kubectl get secret pricehop-secrets -n pricehop &>/dev/null; then
   exit 1
 fi
 
-kubectl apply -k kubernetes/
+# Apply PVCs first and wait for them to be Bound before starting pods
+echo "==> Ensuring PVCs exist before deploying pods…"
+kubectl apply -f kubernetes/manifests/namespace.yaml
+kubectl apply -f kubernetes/manifests/pvcs.yaml
+echo "    Waiting for PVCs to be Bound…"
+for pvc in auth-data-pvc price-data-pvc; do
+  for i in $(seq 1 24); do
+    STATUS=$(kubectl get pvc "$pvc" -n pricehop -o jsonpath='{.status.phase}' 2>/dev/null || echo "Pending")
+    [ "$STATUS" = "Bound" ] && echo "    ✅ ${pvc} Bound" && break
+    [ "$i" -eq 24 ] && echo "    ⚠️  ${pvc} still ${STATUS} after 120s — continuing anyway"
+    sleep 5
+  done
+done
+
+kubectl apply -k kubernetes/ --server-side --force-conflicts
 
 echo ""
 echo "==> Waiting for pricehop rollout…"

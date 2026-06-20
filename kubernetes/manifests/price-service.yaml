@@ -6,7 +6,7 @@ metadata:
   labels:
     app: price-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: price-service
@@ -65,16 +65,3 @@ spec:
     - port: 5002
       targetPort: 5002
   type: ClusterIP
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: price-data-pvc
-  namespace: pricehop
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: gp2
-  resources:
-    requests:
-      storage: 2Gi
