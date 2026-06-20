@@ -87,41 +87,25 @@ if ! kubectl get secret pricehop-secrets -n pricehop &>/dev/null; then
   exit 1
 fi
 
-# Apply PVCs first and wait for them to be Bound before starting pods
-echo "==> Ensuring PVCs exist before deploying pods…"
+# Create PVCs before pods so the objects exist when Deployments are scheduled.
+# gp2 uses WaitForFirstConsumer — PVCs stay Pending until a pod is scheduled,
+# which is normal. Do NOT wait for Bound here; just ensure the objects exist.
+echo "==> Creating PVCs (gp2 WaitForFirstConsumer — will bind when pods schedule)…"
 kubectl apply -f kubernetes/manifests/namespace.yaml
 
-# Detect the default StorageClass on this cluster
-DEFAULT_SC=$(kubectl get storageclass \
-  -o jsonpath='{.items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")].metadata.name}' \
-  2>/dev/null | awk '{print $1}')
-DEFAULT_SC="${DEFAULT_SC:-gp2}"
-echo "    Using StorageClass: ${DEFAULT_SC}"
-
-# Delete PVCs that are stuck in Pending (spec is immutable — must recreate)
+# Delete PVCs only if they are stuck with a mismatched storageClassName
 for pvc in auth-data-pvc price-data-pvc; do
-  STATUS=$(kubectl get pvc "$pvc" -n pricehop -o jsonpath='{.status.phase}' 2>/dev/null || echo "")
-  if [ "$STATUS" = "Pending" ]; then
-    echo "    Deleting stuck Pending PVC: ${pvc}"
+  EXISTING_SC=$(kubectl get pvc "$pvc" -n pricehop \
+    -o jsonpath='{.spec.storageClassName}' 2>/dev/null || echo "")
+  if [ -n "$EXISTING_SC" ] && [ "$EXISTING_SC" != "gp2" ]; then
+    echo "    Recreating ${pvc} (storageClassName mismatch: ${EXISTING_SC} → gp2)…"
     kubectl delete pvc "$pvc" -n pricehop --ignore-not-found
     sleep 2
   fi
 done
 
-# Patch pvcs.yaml with the detected StorageClass and apply
-sed "s/storageClassName:.*/storageClassName: ${DEFAULT_SC}/" \
-  kubernetes/manifests/pvcs.yaml | kubectl apply -f - 2>/dev/null \
-|| kubectl apply -f kubernetes/manifests/pvcs.yaml
-
-echo "    Waiting for PVCs to be Bound…"
-for pvc in auth-data-pvc price-data-pvc; do
-  for i in $(seq 1 24); do
-    STATUS=$(kubectl get pvc "$pvc" -n pricehop -o jsonpath='{.status.phase}' 2>/dev/null || echo "Pending")
-    [ "$STATUS" = "Bound" ] && echo "    ✅ ${pvc} Bound" && break
-    [ "$i" -eq 24 ] && echo "    ⚠️  ${pvc} still ${STATUS} — check: kubectl get storageclass"
-    sleep 5
-  done
-done
+kubectl apply -f kubernetes/manifests/pvcs.yaml
+echo "    ✅ PVCs created — will bind to EBS volumes when pods are first scheduled"
 
 # Delete any Deployments with stale immutable selectors before applying.
 # This happens when commonLabels previously injected extra labels into selectors.
