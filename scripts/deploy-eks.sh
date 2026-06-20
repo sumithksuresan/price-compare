@@ -16,9 +16,9 @@ echo "==> Applying ArgoCD core (argocd-install/)…"
 kubectl apply -k kubernetes/argocd-install/
 
 echo ""
-echo "==> Installing ArgoCD Image Updater v0.12.3…"
+echo "==> Installing ArgoCD Image Updater (stable)…"
 kubectl apply -n argocd -f \
-  https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/v0.12.3/manifests/install.yaml
+  https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/stable/manifests/install.yaml
 
 echo ""
 echo "==> Applying Image Updater config patch…"
