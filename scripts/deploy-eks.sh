@@ -10,6 +10,36 @@ AWS_REGION="${AWS_REGION:-us-east-1}"
 echo "==> Connecting to EKS cluster: ${CLUSTER_NAME}"
 aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$AWS_REGION"
 
+# ── 0. Ensure EBS CSI driver addon is installed ───────────────────────────────
+echo ""
+echo "==> Checking EBS CSI driver addon…"
+export AWS_PAGER=""
+EBS_STATUS=$(aws eks describe-addon \
+  --cluster-name "$CLUSTER_NAME" \
+  --addon-name aws-ebs-csi-driver \
+  --region "$AWS_REGION" \
+  --query 'addon.status' \
+  --output text 2>/dev/null || echo "NOT_FOUND")
+
+if [ "$EBS_STATUS" = "NOT_FOUND" ]; then
+  echo "    Installing aws-ebs-csi-driver addon…"
+  aws eks create-addon \
+    --cluster-name "$CLUSTER_NAME" \
+    --addon-name aws-ebs-csi-driver \
+    --region "$AWS_REGION" \
+    --output text
+  echo "    Waiting for EBS CSI driver to become active…"
+  aws eks wait addon-active \
+    --cluster-name "$CLUSTER_NAME" \
+    --addon-name aws-ebs-csi-driver \
+    --region "$AWS_REGION"
+  echo "    ✅ EBS CSI driver installed and active"
+elif [ "$EBS_STATUS" = "ACTIVE" ]; then
+  echo "    ✅ EBS CSI driver already active"
+else
+  echo "    ⚠️  EBS CSI driver status: ${EBS_STATUS} — continuing anyway"
+fi
+
 # ── 1. Install / upgrade ArgoCD inside the cluster ────────────────────────────
 echo ""
 echo "==> Applying ArgoCD core (argocd-install/)…"
