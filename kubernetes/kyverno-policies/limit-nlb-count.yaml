@@ -1,0 +1,51 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: limit-nlb-count
+  annotations:
+    policies.kyverno.io/title: Limit AWS NLB Count
+    policies.kyverno.io/category: AWS Cost Control
+    policies.kyverno.io/description: >-
+      Prevents more than 2 AWS Network Load Balancers from being created
+      cluster-wide. Only Services of type LoadBalancer with the NLB annotation
+      are counted. UPDATE operations on existing services are always allowed.
+spec:
+  validationFailureAction: Enforce
+  background: false
+  rules:
+    - name: check-nlb-limit
+      match:
+        any:
+          - resources:
+              kinds:
+                - Service
+              operations:
+                - CREATE
+      preconditions:
+        all:
+          # Only enforce on NLB-type LoadBalancer services
+          - key: "{{ request.object.spec.type }}"
+            operator: Equals
+            value: LoadBalancer
+          - key: "{{ request.object.metadata.annotations.\"service.beta.kubernetes.io/aws-load-balancer-type\" || '' }}"
+            operator: Equals
+            value: nlb
+      context:
+        - name: existingNLBCount
+          apiCall:
+            urlPath: "/api/v1/services"
+            jmesPath: >-
+              items[?spec.type=='LoadBalancer'
+                && metadata.annotations."service.beta.kubernetes.io/aws-load-balancer-type"=='nlb'
+              ] | length(@)
+      validate:
+        message: >-
+          Creating this NLB would exceed the cluster limit of 2 AWS Network Load Balancers.
+          Current NLB count: {{ existingNLBCount }}/2.
+          Delete an existing NLB service before creating a new one.
+        deny:
+          conditions:
+            any:
+              - key: "{{ existingNLBCount }}"
+                operator: GreaterThanOrEquals
+                value: "2"

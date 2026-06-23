@@ -24,6 +24,22 @@ echo ""
 echo "==> Applying Image Updater config patch…"
 kubectl apply -f kubernetes/argocd-install/image-updater-cm-patch.yaml
 
+# ── 1b. Install Kyverno (policy engine) ───────────────────────────────────────
+echo ""
+echo "==> Installing Kyverno v1.13.0…"
+kubectl apply -f \
+  https://github.com/kyverno/kyverno/releases/download/v1.13.0/install.yaml
+
+echo ""
+echo "==> Waiting for Kyverno to be ready…"
+kubectl wait --for=condition=ready pod \
+  -l app.kubernetes.io/part-of=kyverno \
+  -n kyverno --timeout=180s
+
+echo ""
+echo "==> Applying Kyverno policies…"
+kubectl apply -f kubernetes/kyverno-policies/
+
 echo ""
 echo "==> Waiting for ArgoCD deployments to be ready…"
 for deploy in argocd-server argocd-application-controller argocd-repo-server argocd-redis; do
