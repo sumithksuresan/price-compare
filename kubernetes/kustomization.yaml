@@ -18,16 +18,16 @@ resources:
 images:
 - name: pricehop/api-gateway
   newName: 590184106649.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
-  newTag: dcf3fa8
+  newTag: 6f17266
 - name: pricehop/auth-service
   newName: 590184106649.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
-  newTag: dcf3fa8
+  newTag: 6f17266
 - name: pricehop/frontend
   newName: 590184106649.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
-  newTag: dcf3fa8
+  newTag: 6f17266
 - name: pricehop/price-service
   newName: 590184106649.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
-  newTag: dcf3fa8
+  newTag: 6f17266
 
 labels:
 - pairs:
