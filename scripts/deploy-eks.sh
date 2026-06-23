@@ -27,7 +27,7 @@ kubectl apply -f kubernetes/argocd-install/image-updater-cm-patch.yaml
 # ── 1b. Install Kyverno (policy engine) ───────────────────────────────────────
 echo ""
 echo "==> Installing Kyverno v1.13.0…"
-kubectl apply -f \
+kubectl apply --server-side -f \
   https://github.com/kyverno/kyverno/releases/download/v1.13.0/install.yaml
 
 echo ""
