@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway:latest
+          image: pricehop/api-gateway:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80

@@ -19,7 +19,7 @@ spec:
         fsGroup: 0
       containers:
         - name: auth-service
-          image: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service:latest
+          image: pricehop/auth-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 5001

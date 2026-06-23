@@ -12,34 +12,25 @@ resources:
 - manifests/frontend.yaml
 - manifests/api-gateway.yaml
 
-# CI pipeline writes new git-SHA tags here on every push to main.
+# CI rewrites newName (full ECR URL) and newTag (git SHA) on every push.
+# The name field matches the placeholder image in the deployment manifests.
+# Changing AWS_ACCOUNT_ID secret in GitHub automatically updates the ECR URL.
 images:
-- name: 533267179439.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
-  newName: 533267179439.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
-  newTag: ea34589
-- name: 533267179439.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
-  newName: 533267179439.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
-  newTag: ea34589
-- name: 533267179439.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
-  newName: 533267179439.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
-  newTag: ea34589
-- name: 533267179439.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
-  newName: 533267179439.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
-  newTag: ea34589
-- name: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
+- name: pricehop/api-gateway
   newName: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
-  newTag: ea34589
-- name: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
+  newTag: latest
+- name: pricehop/auth-service
   newName: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
-  newTag: ea34589
-- name: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
+  newTag: latest
+- name: pricehop/frontend
   newName: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
-  newTag: ea34589
-- name: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
+  newTag: latest
+- name: pricehop/price-service
   newName: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
-  newTag: ea34589
+  newTag: latest
 
 labels:
 - pairs:
     app.kubernetes.io/managed-by: argocd
     app.kubernetes.io/part-of: pricehop
+  includeSelectors: false

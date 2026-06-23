@@ -169,11 +169,14 @@ jobs:
           BASE="${{ env.ECR_BASE }}"
           cd kubernetes
 
+          # name= matches the placeholder in deployment manifests (no account ID).
+          # newName= is the full ECR URL driven by AWS_ACCOUNT_ID secret.
+          # Changing AWS_ACCOUNT_ID secret automatically updates the registry URL.
           kustomize edit set image \
-            "${BASE}/frontend=${BASE}/frontend:${SHORT}" \
-            "${BASE}/auth-service=${BASE}/auth-service:${SHORT}" \
-            "${BASE}/price-service=${BASE}/price-service:${SHORT}" \
-            "${BASE}/api-gateway=${BASE}/api-gateway:${SHORT}"
+            "pricehop/frontend=${BASE}/frontend:${SHORT}" \
+            "pricehop/auth-service=${BASE}/auth-service:${SHORT}" \
+            "pricehop/price-service=${BASE}/price-service:${SHORT}" \
+            "pricehop/api-gateway=${BASE}/api-gateway:${SHORT}"
 
           echo "Updated kustomization.yaml:"
           grep -A2 "images:" kustomization.yaml
