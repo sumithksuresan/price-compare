@@ -11,7 +11,7 @@ spec:
 
   # Only allow syncing from your git repo
   sourceRepos:
-    - https://github.com/YOUR_ORG/price-compare.git   # replace with your repo URL
+    - https://github.com/sumithksuresan/price-compare.git
 
   # Only allow deploying into the pricehop namespace on the local cluster
   destinations:

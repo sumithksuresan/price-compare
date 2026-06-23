@@ -28,7 +28,7 @@ spec:
   project: pricehop
 
   source:
-    repoURL: https://github.com/YOUR_ORG/price-compare.git   # replace
+    repoURL: https://github.com/sumithksuresan/price-compare.git
     targetRevision: main
     path: kubernetes          # ArgoCD reads kubernetes/kustomization.yaml
     kustomize:
@@ -73,6 +73,6 @@ spec:
   # Health checks on top of ArgoCD's built-ins
   info:
     - name: repo
-      value: https://github.com/YOUR_ORG/price-compare
+      value: https://github.com/sumithksuresan/price-compare
     - name: slack-channel
       value: "#pricehop-deploys"
