@@ -3,6 +3,7 @@ import requests as http
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 
 app = Flask(__name__)
+APP_VERSION = "1.1.0"
 
 AUTH_SERVICE_URL = os.environ.get("AUTH_SERVICE_URL", "http://auth-service:5001")
 PRICE_SERVICE_URL = os.environ.get("PRICE_SERVICE_URL", "http://price-service:5002")
