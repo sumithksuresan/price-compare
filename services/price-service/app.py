@@ -95,6 +95,11 @@ def health():
     return jsonify({"status": "ok", "service": "price"})
 
 
+@app.route("/version")
+def version():
+    return jsonify({"service": "price-service", "version": "1.1.0", "platforms": len(ALL_SCRAPERS)})
+
+
 @app.route("/search")
 def search():
     query = (request.args.get("q") or "").strip()
