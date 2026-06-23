@@ -17,20 +17,19 @@ resources:
 # Changing AWS_ACCOUNT_ID secret in GitHub automatically updates the ECR URL.
 images:
 - name: pricehop/api-gateway
-  newName: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
-  newTag: latest
+  newName: 590184106649.dkr.ecr.us-east-1.amazonaws.com/pricehop/api-gateway
+  newTag: 203c21a
 - name: pricehop/auth-service
-  newName: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
-  newTag: latest
+  newName: 590184106649.dkr.ecr.us-east-1.amazonaws.com/pricehop/auth-service
+  newTag: 203c21a
 - name: pricehop/frontend
-  newName: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
-  newTag: latest
+  newName: 590184106649.dkr.ecr.us-east-1.amazonaws.com/pricehop/frontend
+  newTag: 203c21a
 - name: pricehop/price-service
-  newName: 664418989617.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
-  newTag: latest
+  newName: 590184106649.dkr.ecr.us-east-1.amazonaws.com/pricehop/price-service
+  newTag: 203c21a
 
 labels:
 - pairs:
     app.kubernetes.io/managed-by: argocd
     app.kubernetes.io/part-of: pricehop
-  includeSelectors: false
